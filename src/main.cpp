@@ -3,6 +3,6 @@
 int main()
 {
     InverseIndexing i;
-    i.indexDocuments("../datasets/full_docs_small");
+    i.indexDocuments("../datasets/full_docs_small/");
     return 0;
 }

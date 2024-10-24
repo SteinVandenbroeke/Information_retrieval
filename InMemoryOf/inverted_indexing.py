@@ -1,26 +1,16 @@
 import os
 import re
-
+from collections import defaultdict
 
 def tokenize_documents(path_to_documents):
-    terms = {}
+    inverted_index = defaultdict(set)
     print(len(os.listdir(path_to_documents)), " documents found.")
     for d in os.listdir(path_to_documents):
-        if d.endswith('.txt') and os.path.isfile(os.path.join(path_to_documents, d)):
+        if d.endswith('.txt'):
             doc_id = int(d.replace("output_", "").replace(".txt", ""))
             file_path = os.path.join(path_to_documents, d)
             with open(file_path, 'r') as file:
-                f = file.read()
-                cleaned_text = re.sub(r'[^a-zA-Z0-9]', ' ', f)
-                doc_tokens = cleaned_text.lower().split()
-                for x in doc_tokens:
-                       if x in terms.keys():
-                           terms[x] = terms[x] + (doc_id,)
-                       else:
-                           terms[x] = (doc_id,)
-                #terms += [(x, doc_id) for x in doc_tokens]
-    print("done tokens")
-    print(terms)
-    print("done sort")
-
-
+                terms = re.sub(r'\W+', ' ', file.read().lower()).split()
+                for x in terms:
+                    inverted_index[x].add(doc_id)
+    print("done indexing")
