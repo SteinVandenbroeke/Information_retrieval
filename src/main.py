@@ -6,7 +6,8 @@ if __name__ == '__main__':
     # doc_amount = 3
     # query = "best auto insurance"
     inverted_index, doc_amount = index_documents('../datasets/full_docs_small')
-    query = "best auto insurance"
+    query = "types of road hugger tires"
+    print(query)
     query_terms = process_query(query)
     result = retrieve_documents(query_terms, inverted_index, doc_amount)
     print(result)
