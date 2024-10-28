@@ -1,3 +1,4 @@
+import math
 import os
 import re
 from collections import defaultdict
@@ -69,8 +70,8 @@ def index_documents(path_to_documents):
             doc_id = int(d.replace("output_", "").replace(".txt", ""))
             file_path = os.path.join(path_to_documents, d)
             with open(file_path, 'r') as file:
-                terms = file.read().lower().split()
-                #terms = re.sub(r'\W+', ' ', file.read().lower()).split()
+                #terms = file.read().lower().split()
+                terms = process_query(file.read())
                 for x in terms:
                     inverted_index[x][doc_id] += 1
     print("done indexing")
@@ -84,7 +85,7 @@ def process_query(query):
 
 def retrieve_documents(query_terms, inverted_index, doc_amount):
     query_vector = []
-    doc_vector = defaultdict(list)
+    doc_vectors = defaultdict(lambda: defaultdict(float))
     for i, term in enumerate(query_terms):
         if not term in inverted_index: # skip if term not found in index
             query_vector.append(0)
@@ -93,16 +94,15 @@ def retrieve_documents(query_terms, inverted_index, doc_amount):
         df = len(inverted_index[term])  # document frequency: number of documents that t occurs in
         idf_weight = np.log10(doc_amount / df)  # document frequency weight
         for doc, tf in inverted_index[term].items():
-            tf_weight = 1 + np.log10(inverted_index[term][doc]) if inverted_index[term][doc] > 0 else 0  # term frequency weight for document d
-            doc_vector[doc].append((tf_weight * idf_weight) * query_vector[i])
-            #print(term, doc, ": ", doc_scores[doc])
-    query_norm = np.sqrt(sum(v ** 2 for v in query_vector))
-    doc_scores = []
-    for doc in doc_vector:
-        doc_vector_point = doc_vector[doc]
-        doc_norm = np.sqrt(sum(v ** 2 for v in doc_vector_point))
-        if doc_norm > 0:
-            doc_vector[doc] /= (query_norm * doc_norm) # normalize
-            doc_scores.append((doc, sum(x for x in doc_vector[doc])))
-            #print(doc, ": ", doc_scores[doc])
-    return [doc[0] for doc in sorted(doc_scores, key=lambda x: x[1], reverse=True)]
+            tf_weight = (1 + np.log10(tf)) if inverted_index[term][doc] > 0 else 0  # term frequency weight for document d
+            doc_vectors[doc][term] = (tf_weight * idf_weight)
+    query_norm = np.sqrt(sum(math.pow(v,2) for v in query_vector))
+    doc_scores = defaultdict(int)
+    for doc in doc_vectors:
+        doc_vector = doc_vectors[doc]
+        doc_norm = np.sqrt(sum(math.pow(v,2)for v in doc_vector.values()))
+        for i, term in enumerate(query_terms):
+            doc_vector[term] *= (query_vector[i] / (doc_norm * query_norm))
+        doc_scores[doc] =  sum(x for x in doc_vectors[doc].values())
+    print(doc_scores)
+    return [int(doc) for doc in sorted(doc_scores, key=doc_scores.get, reverse=True)]
