@@ -1,0 +1,6 @@
+# ninja log v6
+1	732	1729782632218574475	CMakeFiles/Information_retrieval.dir/src/main.cpp.o	4c85a130e7ad7456
+2	864	1729782632219574477	CMakeFiles/Information_retrieval.dir/src/InverseIndexing.cpp.o	dc4cbd4219affc3e
+5	508	1729782719494715579	CMakeFiles/Information_retrieval.dir/src/main.cpp.o	4c85a130e7ad7456
+6	559	1729782719496715583	CMakeFiles/Information_retrieval.dir/src/InverseIndexing.cpp.o	dc4cbd4219affc3e
+559	639	1729782720048716479	Information_retrieval	2f67ab7a0ba8496c

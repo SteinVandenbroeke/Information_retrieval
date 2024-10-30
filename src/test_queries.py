@@ -2,7 +2,7 @@ from src.inverted_indexing import index_documents, process_query, retrieve_docum
 import pandas as pd
 
 def test_queries(small = True):
-    inverted_index, doc_amount = index_documents('../datasets/full_docs_small')
+    inverted_index, doc_amount = index_documents('./../../datasets/full_docs')
     print("Testing queries for ", "small" if small else "big", " database:")
     query_path = "../queries/dev_queries" + "_small.csv" if small else ".csv"
     query_data = pd.read_csv(query_path, names=["Query number","Query"], skiprows=1)
