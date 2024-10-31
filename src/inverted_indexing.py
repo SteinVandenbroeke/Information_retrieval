@@ -5,22 +5,23 @@ from collections import defaultdict
 import numpy as np
 import datetime
 import sys
+import pickle
 
 from numpy.ma.core import array
 
 
-def tokenize_documents(path_to_documents):
+def tokenize_documents(path_to_documents, saveToDisk = ""):
     start_time = datetime.datetime.now()
-    tokecounter = defaultdict(lambda: np.array([0, 0]))
+    tokecounter = defaultdict(int)
     counter = 0
-    print("start")
+    print("tokenize_documents")
     for d in os.listdir(path_to_documents):
         if d.endswith('.txt'):
             file_path = os.path.join(path_to_documents, d)
             with open(file_path, 'r') as file:
                 terms = file.read().lower().split()
                 for x in terms:
-                    tokecounter[x][0] += 1
+                    tokecounter[x] += 1
         if (counter % 10000 == 0):
             print(counter, " | size: ", sys.getsizeof(tokecounter), " | items", len(tokecounter))
         counter += 1
@@ -36,16 +37,17 @@ def tokenize_documents(path_to_documents):
             doc_id = int(d.replace("output_", "").replace(".txt", ""))
             file_path = os.path.join(path_to_documents, d)
             with open(file_path, 'r') as file:
-                terms = file.read().lower().split()
+                terms = process_query(file.read())
                 for x in terms:
                     if x in inverted_index:
-                        inverted_index[x][tokecounter[x][1]] = doc_id
+                        inverted_index[x][0] += int(1)
+                        inverted_index[x][inverted_index[x][0]] = doc_id
                     else:
-                        array = np.empty(tokecounter[x][0])
-                        array[0] = doc_id
+                        array = np.empty(tokecounter[x] + 1, dtype=int)
+                        array[0] = int(1)
+                        array[1] = doc_id
                         inverted_index[x] = array
-
-                    tokecounter[x][1] += 1
+                        del tokecounter[x]
 
         if(counter % 10000 == 0):
             print(counter, " | size: ",  sys.getsizeof(inverted_index), " | items", len(inverted_index))
@@ -58,11 +60,21 @@ def tokenize_documents(path_to_documents):
     print("done indexing")
     end_time = datetime.datetime.now()
     print("time measurement: ", end_time - start_time)
-    print(inverted_index)
+
+    if saveToDisk != "":
+        with open(saveToDisk + '.pkl', 'wb') as f:
+            pickle.dump(inverted_index, f, pickle.HIGHEST_PROTOCOL)
+
     return inverted_index, doc_amount
 
+def openPresaved(savedFile):
+    with open(savedFile + '.pkl', 'rb') as f:
+        inverted_index = pickle.load(f)
+    return inverted_index
 
 def index_documents(path_to_documents):
+    print("index_documents")
+    start_time = datetime.datetime.now()
     inverted_index = defaultdict(lambda: defaultdict(int))
     doc_amount = len(os.listdir(path_to_documents))-2 #2 non txt files in database
     print(doc_amount, " documents found.")
@@ -80,6 +92,13 @@ def index_documents(path_to_documents):
             print("done: ", counter)
         counter += 1
     print("done indexing")
+    end_time = datetime.datetime.now()
+    print("time measurement: ", end_time - start_time)
+    total_size = sys.getsizeof(inverted_index)  # Size of the dictionary itself
+    for key, value_set in inverted_index.items():
+        total_size += sys.getsizeof(value_set)  # Add the size of each set
+    print("total size: ", total_size)
+
     return inverted_index, doc_amount
 
 def process_query(query):
