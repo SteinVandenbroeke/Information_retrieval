@@ -11,13 +11,15 @@ from numpy.ma.core import array
 
 def tokenize_documents(path_to_documents):
     tokecounter = defaultdict(lambda: np.array([0, 0]))
+    start_time = datetime.datetime.now()
+
     counter = 0
     print("start")
     for d in os.listdir(path_to_documents):
         if d.endswith('.txt'):
             file_path = os.path.join(path_to_documents, d)
             with open(file_path, 'r') as file:
-                terms = re.sub(r'\W+', ' ', file.read().lower()).split()
+                terms = file.read().lower().split()
                 for x in terms:
                     tokecounter[x][0] += 1
         if (counter % 10000 == 0):
@@ -25,8 +27,6 @@ def tokenize_documents(path_to_documents):
         counter += 1
 
     print("token counter speedtest")
-
-    start_time = datetime.datetime.now()
     inverted_index = defaultdict()
     doc_amount = len(os.listdir(path_to_documents))
     print(doc_amount, " documents found.")
@@ -36,15 +36,18 @@ def tokenize_documents(path_to_documents):
             doc_id = int(d.replace("output_", "").replace(".txt", ""))
             file_path = os.path.join(path_to_documents, d)
             with open(file_path, 'r') as file:
-                terms = re.sub(r'\W+', ' ', file.read().lower()).split()
+                terms = file.read().lower().split()
                 for x in terms:
                     if x in inverted_index:
-                        inverted_index[x][tokecounter[x][1]] = doc_id
+                        empty_index = np.where(np.isnan(tokecounter))[0][0] if np.any(np.isnan(tokecounter)) else None
+
+                        inverted_index[x][empty_index] = doc_id
+
                     else:
                         array = np.empty(tokecounter[x][0])
                         array[0] = doc_id
+                        del tokecounter[x]
                         inverted_index[x] = array
-                    tokecounter[x][1] += 1
 
         if(counter % 10000 == 0):
             print(counter, " | size: ",  sys.getsizeof(inverted_index), " | items", len(inverted_index))
@@ -62,10 +65,11 @@ def tokenize_documents(path_to_documents):
 
 
 def index_documents(path_to_documents):
+    counter = 0
     inverted_index = defaultdict(lambda: defaultdict(int))
     doc_amount = len(os.listdir(path_to_documents))-2 #2 non txt files in database
     print(doc_amount, " documents found.")
-    for d in os.listdir(path_to_documents):
+    for i, d in enumerate(os.listdir(path_to_documents)):
         if d.endswith('.txt'):
             doc_id = int(d.replace("output_", "").replace(".txt", ""))
             file_path = os.path.join(path_to_documents, d)
@@ -74,8 +78,11 @@ def index_documents(path_to_documents):
                 terms = process_query(file.read())
                 for x in terms:
                     inverted_index[x][doc_id] += 1
+            if(counter%10000 == 0):
+                print("done: ", counter)
+            counter += 1
     print("done indexing")
-    return inverted_index, doc_amount
+    return inverted_index, math.floor(doc_amount/2)
 
 def process_query(query):
     terms = query.lower().split()
@@ -104,5 +111,5 @@ def retrieve_documents(query_terms, inverted_index, doc_amount):
         for i, term in enumerate(query_terms):
             doc_vector[term] *= (query_vector[i] / (doc_norm * query_norm))
         doc_scores[doc] =  sum(x for x in doc_vectors[doc].values())
-    print(doc_scores)
+    #print(doc_scores)
     return [int(doc) for doc in sorted(doc_scores, key=doc_scores.get, reverse=True)]

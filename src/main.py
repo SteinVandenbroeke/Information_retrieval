@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # print(result)
 
     # inverted_index, doc_amount = index_documents('../datasets/full_docs_small')
-    # query = "types of road hugger tires"
+    # query = "colorado routing number loveland colorado"
     # print(query)
     # query_terms = process_query(query)
     # result = retrieve_documents(query_terms, inverted_index, doc_amount)
