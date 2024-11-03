@@ -71,11 +71,11 @@ class DocSearchDictPreCompute:
 
         return inverted_index, doc_amount
 
-    def retrieve_documents(self, query_terms, itemAmount):
+    def retrieve_documents(self, query, itemAmount):
+        query_terms = self.query_processor.tokenize(query)
         start_time = datetime.datetime.now()
         doc_query_vector = defaultdict(float)
         doc_vector_total_pow = defaultdict(float)
-        print(set(query_terms))
         for i, term in enumerate(set(query_terms)):
             if not term in self.inverted_index:  # skip if term not found in index
                 continue
@@ -102,6 +102,6 @@ class DocSearchDictPreCompute:
         returnList = [doc[1] for doc in nlargest(itemAmount, doc_scores)]
         end_time= datetime.datetime.now()
 
-        print(f"first loop time: {end_time_first_loop - start_time} | second loop time {end_time_second_loop - end_time_first_loop} | list processing time {end_time-end_time_second_loop} | total time: {end_time - start_time}")
+        #print(f"first loop time: {end_time_first_loop - start_time} | second loop time {end_time_second_loop - end_time_first_loop} | list processing time {end_time-end_time_second_loop} | total time: {end_time - start_time}")
 
         return returnList

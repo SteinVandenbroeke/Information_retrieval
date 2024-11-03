@@ -121,8 +121,8 @@ class DocSearchTuplePreCompute:
             if file.endswith('.joblib'):
                 self.inverted_index = self.inverted_index | load(f"preprocessing/{file}")
 
-    def retrieve_documents(self, query_terms, itemAmount):
-        start_time = datetime.datetime.now()
+    def retrieve_documents(self, query, itemAmount):
+        query_terms = self.query_processor.tokenize(query)
         doc_query_vector = defaultdict(float)
         doc_vector_total_pow = defaultdict(float)
         for i, term in enumerate(set(query_terms)):
@@ -136,21 +136,12 @@ class DocSearchTuplePreCompute:
                 doc_query_vector[doc_id] += doc_value * query_value
                 doc_vector_total_pow[doc_id] += doc_value ** 2
 
-        end_time_first_loop = datetime.datetime.now()
-
         doc_scores = []
         for doc in doc_query_vector:
             doc_norm = np.sqrt(doc_vector_total_pow[doc])
             if doc_norm > 0:
                 normalized_score = doc_query_vector[doc] / doc_norm  # normalize
-                heappush(doc_scores, (normalized_score, doc))
-                # print(doc, ": ", doc_scores[doc])
-
-        end_time_second_loop = datetime.datetime.now()
+                heappush(doc_scores, (normalized_score, int(doc)))
 
         returnList = [doc[1] for doc in nlargest(itemAmount, doc_scores)]
-        end_time = datetime.datetime.now()
-
-        #print(f"first loop time: {end_time_first_loop - start_time} | second loop time {end_time_second_loop - end_time_first_loop} | list processing time {end_time - end_time_second_loop} | total time: {end_time - start_time}")
-
         return returnList

@@ -1,7 +1,7 @@
 from src.Query_processors.QueryProcessor import QueryProcessor
 import re
 
-class AdvancedQueryProcessor(QueryProcessor):
+class RegexQueryProcessor(QueryProcessor):
     def __init__(self):
         pass
 

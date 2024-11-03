@@ -12,10 +12,11 @@ import numpy as np
 from src.DocSearch import DocSearch
 from src.DocSearchDictPreCompute import DocSearchDictPreCompute
 from src.DocSearchTuplePreCompute import DocSearchTuplePreCompute
-from src.Query_processors.AdvancedQueryProcessor import AdvancedQueryProcessor
+from src.Query_processors.NLTKQueryProcessor import NLTKQueryProcessor
+from src.Query_processors.RegexQueryProcessor import RegexQueryProcessor
 from src.Query_processors.BasicQueryProcessor import BasicQueryProcessor
 from src.Query_processors.QueryProcessor import QueryProcessor
-from src.test_queries import test_queries
+from src.test_queries import test_queries, create_result_csv, evaluation
 
 if __name__ == '__main__':
     # query_processor = AdvancedQueryProcessor()
@@ -23,20 +24,22 @@ if __name__ == '__main__':
     # docsearch.tokenize_documents()
     # docsearch.saveInverseIndex("small_export")
 
+
+
     start_time = datetime.datetime.now()
-    query_processor = AdvancedQueryProcessor()
-    docsearch = DocSearchTuplePreCompute(query_processor, "./../../datasets/full_docs")
+    query_processor = NLTKQueryProcessor()
+    docsearch = DocSearchDictPreCompute(query_processor, "./../../datasets/full_docs")
     docsearch.tokenize_documents()
-    #docsearch.openPresaved("small_export")
+    #docsearch.openPresaved("large_export")
+
+
+    #docsearch.saveInverseIndex("large_export")
+    print("export done")
+    #create_result_csv(docsearch, False)
+    evaluation(docsearch, False)
 
     end_time_doc = datetime.datetime.now()
-    print("Doc processing: ", end_time_doc - start_time)
-    docsearch.saveInverseIndex("large_export")
-    print("export done")
-    #test_queries(docsearch, True)
-
-
-
+    print("Total time: ", end_time_doc - start_time)
 
 
 
