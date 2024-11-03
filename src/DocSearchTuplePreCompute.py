@@ -1,6 +1,7 @@
 import math
 import os
 from collections import defaultdict
+from copy import deepcopy
 from functools import partial
 from itertools import chain
 from threading import Thread
@@ -24,6 +25,8 @@ def split_list(lst, n):
 
 class DocSearchTuplePreCompute:
     def __init__(self, query_processor: QueryProcessor, folder_path: str):
+        self.pre_computed_overwrite = False
+        self.pre_computed_document_weights = None
         self.inverted_index = None
         self.query_processor = query_processor
         self.folder_path = folder_path
@@ -82,22 +85,6 @@ class DocSearchTuplePreCompute:
         counter = 0
 
         #precomputations
-        for term, docid_amount in inverted_index.items():
-            dft = docid_amount.shape[0]  # document frequency: number of documents that t occurs in
-            idf_weight = np.log10(doc_amount / dft)
-            # Combine them into a structured array with two columns
-            for i, (doc_id, count) in enumerate(docid_amount):
-                if not float(count).is_integer() or not float(doc_id).is_integer():
-                    assert ValueError("count or doc_id not an int", count, doc_id)
-                tftd = int(count)  #term frequency in a document
-                tf_weight = (1 + np.log10(int(tftd))) if int(tftd) > 0 else 0  # term frequency weight for document d
-                if int(inverted_index[term][i][0]) != doc_id:
-                    assert ValueError("Wrong id: ", int(inverted_index[term][i][0]), doc_id)
-                inverted_index[term][i][1] = float(tf_weight * idf_weight)
-
-            if (counter % 10000 == 0):
-                print("Tupelize data", counter)
-            counter += 1
 
         print("total size: ", total_size)
         print("done indexing")
@@ -105,6 +92,22 @@ class DocSearchTuplePreCompute:
         print("time measurement: ", end_time - start_time)
         
         return inverted_index, doc_amount
+
+    def pre_compute_document_weights(self, over_write_inverted_index):
+        if over_write_inverted_index:
+            self.pre_computed_document_weights = self.inverted_index
+        else:
+            self.pre_computed_document_weights = deepcopy(self.inverted_index)
+
+        for term, docid_amount in self.inverted_index.items():
+            dft = docid_amount.shape[0]  # document frequency: number of documents that t occurs in
+            idf_weight = np.log10(self.doc_amount / dft)
+            # Combine them into a structured array with two columns
+            for i, (doc_id, count) in enumerate(docid_amount):
+                tftd = int(count)  #term frequency in a document
+                tf_weight = (1 + np.log10(int(tftd))) if int(tftd) > 0 else 0  # term frequency weight for document d
+                self.pre_computed_document_weights[term][i][1] = float(tf_weight * idf_weight)
+        print(self.inverted_index)
 
 # source = https://stackoverflow.com/questions/22878743/how-to-split-dictionary-into-multiple-dictionaries-fast
     def chunks(self,data, SIZE=50000):
@@ -127,18 +130,23 @@ class DocSearchTuplePreCompute:
                 self.inverted_index = self.inverted_index | load(f"preprocessing/{file}")
 
     def retrieve_documents(self, query, itemAmount):
+        if self.pre_computed_document_weights is not None:
+            return self._retrieve_documents_pre_computed(query, itemAmount)
+        return self._retrieve_documents(query, itemAmount)
+
+    def _retrieve_documents_pre_computed(self, query, itemAmount):
         #return self.retrieve_documents_niels_edition(query, itemAmount)
         query_terms = self.query_processor.tokenize(query)
         doc_query_vector = defaultdict(float)
         doc_vector_total_pow = defaultdict(float)
         for i, term in enumerate(set(query_terms)):
-            if not term in self.inverted_index:  # skip if term not found in index
+            if not term in self.pre_computed_document_weights:  # skip if term not found in index
                 continue
-            dft = self.inverted_index[term].shape[0]  # document frequency: number of documents that t occurs in
+            dft = self.pre_computed_document_weights[term].shape[0]  # document frequency: number of documents that t occurs in
             tftq = query_terms.count(term)  # term frequency in a query
             idf_weight = np.log10(self.doc_amount / dft)  # document frequency weight
             query_value = ((1 + np.log10(tftq)) * idf_weight)
-            for doc_id, doc_value in self.inverted_index[term]:
+            for doc_id, doc_value in self.pre_computed_document_weights[term]:
                 doc_query_vector[doc_id] += doc_value * query_value
                 doc_vector_total_pow[doc_id] += doc_value ** 2
 
@@ -152,14 +160,12 @@ class DocSearchTuplePreCompute:
         returnList = [doc[1] for doc in nlargest(itemAmount, doc_scores)]
         return returnList
 
-    def retrieve_documents_niels_edition(self, query, itemAmount):
+    def _retrieve_documents(self, query, itemAmount):
         query_terms = self.query_processor.tokenize(query)
         query_vector = []
         doc_vectors = defaultdict(lambda: defaultdict(float))
-        print(query_terms)
         for i, term in enumerate(query_terms):
             if not term in self.inverted_index:  # skip if term not found in index
-                print(f"temr {term} not fount")
                 query_vector.append(0)
                 continue
             query_vector.append((1 + np.log(query_terms.count(term))) * np.log(self.doc_amount / len(self.inverted_index[term])))
@@ -176,9 +182,7 @@ class DocSearchTuplePreCompute:
             doc_vector = doc_vectors[doc]
             doc_norm = np.sqrt(sum(math.pow(v, 2) for v in doc_vector.values()))
             for i, term in enumerate(query_terms):
-                print(term, doc_vector[term], (query_vector[i], doc_norm , query_norm))
                 doc_vector[term] *= (query_vector[i] / (doc_norm * query_norm))
             heappush(doc_scores, (sum(x for x in doc_vectors[doc].values()), int(doc)))
-        print(doc_scores)
         returnList = [doc[1] for doc in nlargest(itemAmount, doc_scores)]
         return returnList

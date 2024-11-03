@@ -22,33 +22,22 @@ if __name__ == '__main__':
     # docsearch.tokenize_documents()
     # docsearch.saveInverseIndex("small_export")
 
+    start_time = datetime.datetime.now()
+    query_processor = NLTKQueryProcessor()
+    docsearch = DocSearchTuplePreCompute(query_processor, "./../../datasets/full_docs")
+    docsearch.tokenize_documents()
+    docsearch.pre_compute_document_weights(True)
+    evaluation(docsearch, False)
+    create_result_csv(docsearch, False)
+    end_time_doc = datetime.datetime.now()
+    print("Total time: ", end_time_doc - start_time)
 
 
-    # start_time = datetime.datetime.now()
-    # query_processor = NLTKQueryProcessor()
-    # docsearch = DocSearchTuplePreCompute(query_processor, "./../../datasets/full_docs")
-    # docsearch.tokenize_documents()
-    # #docsearch.openPresaved("large_export")
-    #
-    #
-    # #docsearch.saveInverseIndex("large_export")
-    # print("export done")
-    # #create_result_csv(docsearch, False)
-    # evaluation(docsearch, False)
-    #
-    # end_time_doc = datetime.datetime.now()
-    # print("Total time: ", end_time_doc - start_time)
-
-
-
-
-
-
-    slide_examples_query_processor = NLTKQueryProcessor()
-    slide_examples_docsearch = DocSearchTuplePreCompute(slide_examples_query_processor, "./../../datasets/slides_example")
-    slide_examples_docsearch.tokenize_documents()
-    #tesValues = slide_examples_docsearch.retrieve_documents("best auto insurance", 3)
-    print(slide_examples_docsearch.retrieve_documents("car", 3))
+    # slide_examples_query_processor = NLTKQueryProcessor()
+    # slide_examples_docsearch = DocSearchTuplePreCompute(slide_examples_query_processor, "./../../datasets/slides_example")
+    # slide_examples_docsearch.tokenize_documents()
+    # #tesValues = slide_examples_docsearch.retrieve_documents("best auto insurance", 3)
+    # print(slide_examples_docsearch.retrieve_documents("car", 3))
     # slide_examples_docsearch.inverted_index = {'car': np.array([(1,27),(2,4),(3,24)]), 'auto': np.array([(1, 3), (2, 33)]), 'insurance': np.array([(2, 33), (3, 29)]), 'best': np.array([(1, 14), (3, 17)])}
     # slide_examples_docsearch.doc_amount = 3
     # #slide_examples_docsearch.retrieve_documents("best auto insurance", 3)

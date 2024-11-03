@@ -31,7 +31,7 @@ def test_queries(docsearch, small = True):
         query_result_doc = int(query_result_data[query_result_data['Query_number'] == query_id]['doc_number'].tolist()[0])
 
         #print("query: ", query, ", result: ", query_result_doc, ", you gave: ", result)
-        if query_result_doc in result:
+        if query_result_doc in result[0:1]:
             passes += 1
             #print("passed")
         else:
@@ -81,13 +81,13 @@ def evaluation(docsearch, small=True):
     for q in query_data.values:
         query_id = q[0]
         query = q[1]
-        results = docsearch.retrieve_documents(query, 10)
+        results = docsearch.retrieve_documents(query, 1)
 
         query_result_doc = query_result_data[query_result_data['Query_number'] == query_id]['doc_number'].tolist()
         #print("Result doc", 10, query_id, query_result_doc, results)
         r = len(list(set(results).intersection(set(query_result_doc))))
             #print(results, query_result_doc, r, f"MAP@10: {r/1} MAR@10: {r/len(query_result_doc)}")
-        sumedP10 += r/10
+        sumedP10 += r/1
         sumedR10 += r/len(query_result_doc)
 
         results = results[0:3]
@@ -103,5 +103,5 @@ def evaluation(docsearch, small=True):
     end_time_query_test = datetime.datetime.now()
     print("Query time: ", end_time_query_test - start_time)
     print(f"MAP@3: {sumedP3/total} MAR@3: {sumedR3/total}")
-    print(f"MAP@10: {sumedP10 / total} MAR@10: {sumedR10 / total}")
+    print(f"MAP@1: {sumedP10 / total} MAR@1: {sumedR10 / total}")
 
