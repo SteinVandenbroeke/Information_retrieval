@@ -1,3 +1,0 @@
-/home/steen/Documents/Information_retrieval/cmake-build-debug/CMakeFiles/Information_retrieval.dir
-/home/steen/Documents/Information_retrieval/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/steen/Documents/Information_retrieval/cmake-build-debug/CMakeFiles/rebuild_cache.dir
