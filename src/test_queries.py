@@ -83,22 +83,18 @@ def evaluation(docsearch, small=True):
         query = q[1]
         results = docsearch.retrieve_documents(query, 10)
 
-        query_result_doc = query_result_data[query_result_data['Query_number'] == query_id]['doc_number'].tolist()[0:10]
+        query_result_doc = query_result_data[query_result_data['Query_number'] == query_id]['doc_number'].tolist()
         #print("Result doc", 10, query_id, query_result_doc, results)
-        TP = len(list(set(results).intersection(set(query_result_doc))))
-        FN = len(set(query_result_doc) - set(results))
-        FP = len(set(results) - set(query_result_doc))
-        if TP > 0:
-            sumedP10 += TP/(TP+FP)
-            sumedR10 += TP/(TP+FN)
+        r = len(list(set(results).intersection(set(query_result_doc))))
+            #print(results, query_result_doc, r, f"MAP@10: {r/1} MAR@10: {r/len(query_result_doc)}")
+        sumedP10 += r/10
+        sumedR10 += r/len(query_result_doc)
 
         results = results[0:3]
-        query_result_doc = query_result_doc[0:3]
         #print("Result doc", 3, query_id, query_result_doc, results)
         r = len(list(set(results).intersection(set(query_result_doc))))
-        if TP > 0:
-            sumedP3 += r / 3
-            sumedR3 += TP / (TP + FN)
+        sumedP3 += r / 3
+        sumedR3 += r/len(query_result_doc)
 
         total += 1
         if total % 100 == 0:

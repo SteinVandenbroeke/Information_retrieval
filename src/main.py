@@ -6,9 +6,6 @@ from itertools import chain
 from operator import methodcaller
 from threading import Thread
 import datetime
-
-import numpy as np
-
 from src.DocSearch import DocSearch
 from src.DocSearchDictPreCompute import DocSearchDictPreCompute
 from src.DocSearchTuplePreCompute import DocSearchTuplePreCompute
@@ -17,6 +14,7 @@ from src.Query_processors.RegexQueryProcessor import RegexQueryProcessor
 from src.Query_processors.BasicQueryProcessor import BasicQueryProcessor
 from src.Query_processors.QueryProcessor import QueryProcessor
 from src.test_queries import test_queries, create_result_csv, evaluation
+import numpy as np
 
 if __name__ == '__main__':
     # query_processor = AdvancedQueryProcessor()
@@ -26,23 +24,35 @@ if __name__ == '__main__':
 
 
 
-    start_time = datetime.datetime.now()
-    query_processor = NLTKQueryProcessor()
-    docsearch = DocSearchDictPreCompute(query_processor, "./../../datasets/full_docs")
-    docsearch.tokenize_documents()
-    #docsearch.openPresaved("large_export")
+    # start_time = datetime.datetime.now()
+    # query_processor = NLTKQueryProcessor()
+    # docsearch = DocSearchTuplePreCompute(query_processor, "./../../datasets/full_docs")
+    # docsearch.tokenize_documents()
+    # #docsearch.openPresaved("large_export")
+    #
+    #
+    # #docsearch.saveInverseIndex("large_export")
+    # print("export done")
+    # #create_result_csv(docsearch, False)
+    # evaluation(docsearch, False)
+    #
+    # end_time_doc = datetime.datetime.now()
+    # print("Total time: ", end_time_doc - start_time)
 
 
-    #docsearch.saveInverseIndex("large_export")
-    print("export done")
-    #create_result_csv(docsearch, False)
-    evaluation(docsearch, False)
-
-    end_time_doc = datetime.datetime.now()
-    print("Total time: ", end_time_doc - start_time)
 
 
 
+
+    slide_examples_query_processor = NLTKQueryProcessor()
+    slide_examples_docsearch = DocSearchTuplePreCompute(slide_examples_query_processor, "./../../datasets/slides_example")
+    slide_examples_docsearch.tokenize_documents()
+    #tesValues = slide_examples_docsearch.retrieve_documents("best auto insurance", 3)
+    print(slide_examples_docsearch.retrieve_documents("car", 3))
+    # slide_examples_docsearch.inverted_index = {'car': np.array([(1,27),(2,4),(3,24)]), 'auto': np.array([(1, 3), (2, 33)]), 'insurance': np.array([(2, 33), (3, 29)]), 'best': np.array([(1, 14), (3, 17)])}
+    # slide_examples_docsearch.doc_amount = 3
+    # #slide_examples_docsearch.retrieve_documents("best auto insurance", 3)
+    # print(slide_examples_docsearch.retrieve_documents("best auto insurance", 3), tesValues)
     # query_processor = AdvancedQueryProcessor()
     # docsearch = DocSearchTuplePreCompute(query_processor, "./../../datasets/full_docs_small")
     # docsearch.tokenize_documents()
